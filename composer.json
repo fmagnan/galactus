@@ -1,0 +1,17 @@
+{
+    "autoload": {
+        "psr-0": {
+            "Galactus": [
+                "src",
+                "test"
+            ]
+        }
+    },
+    "require": {
+        "symfony/console": "2.5.4",
+        "guzzlehttp/guzzle": "4.2.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.2.6"
+    }
+}
