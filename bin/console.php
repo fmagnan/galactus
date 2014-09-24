@@ -4,8 +4,11 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 use Symfony\Component\Console\Application;
-use Galactus\Command\Absorb7Cercle;
+use Galactus\Persistence\PDO\Connector;
+use Galactus\Command\AbsorbFeed;
+
+$dbConnector = new Connector('localhost', 'galactus', 'password', 'galactus');
 
 $application = new Application();
-$application->add(new Absorb7Cercle());
+$application->add(new AbsorbFeed($dbConnector));
 $application->run();

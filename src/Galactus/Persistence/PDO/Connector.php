@@ -2,21 +2,8 @@
 
 namespace Galactus\Persistence\PDO;
 
-/**
- * PDO DB access
- * This object is the new version of MySQL.
- * Some methods are not implemented on purpose :
- * - select_db
- * - getTableStruct (seems to not work in original version)
- * - delunion (seems to not work in original version)
- * - addunion (seems to not work in original version)
- * - getDebianPassword (not the good object)
- * - getDeleteQuery
- * - getInsertQuery
- * - getUpdateQuery
- * - free_result
- * - getItentifier
- */
+use Galactus\Persistence\Storable;
+
 class Connector
 {
     const INSERT_IGNORE = 1;
@@ -34,36 +21,22 @@ class Connector
     /**
      * Create a PDOMySQL instance
      */
-    public function __construct($sHost, $sUser, $sPassword, $sDatabase, $charset = 'utf8')
+    public function __construct($host, $user, $pass, $dbName, $charset = 'utf8')
     {
-        $this->host = $sHost;
-        $this->user = $sUser;
-        $this->pass = $sPassword;
-        $this->database = $sDatabase;
+        $this->host = $host;
+        $this->user = $user;
+        $this->pass = $pass;
+        $this->database = $dbName;
         // dynamic port detection
-        $sPort = '';
-        if (strpos($sHost, ':') !== false) {
-            list($sHost, $sPort) = explode(':', $sHost);
+        $port = '';
+        if (strpos($host, ':') !== false) {
+            list($host, $port) = explode(':', $host);
         }
-        // change driver options depending of charset value
-        $driverOptions = null;
-        if (!empty($charset)) {
-            $driverOptions = array(\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES "' . $charset . '"');
-        }
+        $options = [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES "' . $charset . '"'];
         // connexion to database with PDO
-        $this->pdo = new \PDO('mysql:dbname=' . $sDatabase . ';host=' . $sHost . (empty($sPort) ? '' : ';port=' . $sPort), $sUser, $sPassword, $driverOptions);
-    }
-
-    /**
-     * Retrocompatibility for MySQL object
-     * Alias of rowCount
-     */
-    public function affected_rows(\PDOStatement $mRes = null)
-    {
-        if (is_null($mRes)) {
-            $mRes = $this->lastPdoStatement;
-        }
-        return $this->rowCount($mRes);
+        $dsnMask = 'mysql:dbname=%s;host=%s;%s';
+        $dsn = sprintf($dsnMask, $dbName, $host, empty($port) ? '' : ';port=' . $port);
+        $this->pdo = new \PDO($dsn, $user, $pass, $options);
     }
 
     /**
@@ -72,14 +45,6 @@ class Connector
     public function rowCount(\PDOStatement $mRes)
     {
         return $mRes->rowCount();
-    }
-
-    /**
-     * Retrocompatibility for MySQL object
-     */
-    public function close()
-    {
-        return;
     }
 
     /**
@@ -170,7 +135,7 @@ class Connector
             }
         }
         $this->closeCursor($sta);
-        return ($rv);
+        return $rv;
     }
 
     /**
@@ -179,7 +144,7 @@ class Connector
      */
     public function getRow($query, $fetchAssoc = true)
     {
-        $style = ($fetchAssoc) ? \PDO::FETCH_ASSOC : \PDO::FETCH_NUM;
+        $style = $fetchAssoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_NUM;
         return $this->fetchOne($query, array(), $style);
     }
 
@@ -189,7 +154,7 @@ class Connector
      */
     public function getRowById($table, $field, $value, $fetchAssoc = true)
     {
-        $style = ($fetchAssoc) ? \PDO::FETCH_ASSOC : \PDO::FETCH_NUM;
+        $style = $fetchAssoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_NUM;
         $query = 'SELECT * FROM `' . $table . '` WHERE `' . $field . '`=?';
         $sta = $this->execute($query, $value);
         return $sta->fetch($style);
@@ -201,7 +166,7 @@ class Connector
      */
     public function getRowsById($table, $field, $value, $fetchAssoc = true)
     {
-        $style = ($fetchAssoc) ? \PDO::FETCH_ASSOC : \PDO::FETCH_NUM;
+        $style = $fetchAssoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_NUM;
         $query = 'SELECT * FROM `' . $table . '` WHERE `' . $field . '`=?';
         $sta = $this->execute($query, array($value));
         return $sta->fetchAll($style);

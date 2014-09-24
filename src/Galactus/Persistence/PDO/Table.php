@@ -19,14 +19,14 @@ abstract class Table implements Storable
         $this->primaryKey = $primaryKey;
     }
 
-    public function all($fetchStyle = \PDO::FETCH_CLASS)
+    public function all($fetchStyle = \PDO::FETCH_ASSOC)
     {
         $query = sprintf('SELECT * FROM `%s`', $this->tableName);
         $statement = $this->dbConnector->execute($query);
         return $statement->fetchAll($fetchStyle);
     }
 
-    public function update(array $data, $whereClause)
+    public function update(array $data, array $conditions)
     {
         // @todo
     }
@@ -46,6 +46,11 @@ abstract class Table implements Storable
         $row = $statement->fetch(\PDO::FETCH_ASSOC);
 
         return $row;
+    }
+
+    public function findByPk($value, array $fieldsToRetrieve = [])
+    {
+        return $this->findOneBy($this->primaryKey, $value, $fieldsToRetrieve);
     }
 
     public function findBy($field, $value)
