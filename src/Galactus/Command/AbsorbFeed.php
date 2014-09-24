@@ -61,22 +61,34 @@ class AbsorbFeed extends Command
             $output->writeln('adding new post: ' . $post->title);
 
             $date = new \DateTime($post->pubDate, new \DateTimeZone('UTC'));
+            $creationDate = $date->format('Y-m-d h:i:s');
 
             $remoteIdContainerField = property_exists($post, 'guid') ? 'guid' : 'link';
+            $remoteId = $this->extractRemoteIdFrom($post->{$remoteIdContainerField});
+
+            $description = $this->filterText($post->description);
+            $content = $this->filterText($post->children('content', true)->encoded);
 
             $this->postRepository->add(
                 [
-                    'blogId' => $feed['id'],
-                    'remoteId' => $this->extractRemoteIdFrom($post->{$remoteIdContainerField}),
+                    'feedId' => $feed['id'],
+                    'remoteId' => $remoteId,
                     'title' => $post->title,
-                    'creationDate' => $date->format('Y-m-d h:i:s'),
-                    'description' => $post->description,
-                    'content' => $post->children('content', true)->encoded,
+                    'creationDate' => $creationDate,
+                    'description' => $description,
+                    'content' => $content,
                     'url' => $post->link
                 ],
                 true
             );
         }
+    }
+
+    protected function filterText($string)
+    {
+        $string = html_entity_decode($string);
+
+        return $string;
     }
 
     protected function extractRemoteIdFrom($link)
