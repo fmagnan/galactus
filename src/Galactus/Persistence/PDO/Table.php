@@ -19,6 +19,11 @@ abstract class Table implements Storable
         $this->primaryKey = $primaryKey;
     }
 
+    public function add(array $data, $ignore = false)
+    {
+        return $this->dbConnector->insert($this->tableName, $data, false, $ignore);
+    }
+
     public function all($fetchStyle = \PDO::FETCH_ASSOC)
     {
         $query = sprintf('SELECT * FROM `%s`', $this->tableName);
@@ -26,14 +31,16 @@ abstract class Table implements Storable
         return $statement->fetchAll($fetchStyle);
     }
 
-    public function update(array $data, array $conditions)
+    public function findBy($field, $value)
     {
-        // @todo
+        $rows = $this->dbConnector->getRowsById($this->tableName, $field, $value);
+
+        return $rows;
     }
 
-    public function updateDataArray(array $aFieldsValues, array $aCond = array(), $limit = 0, $lock = false)
+    public function findByPk($value, array $fieldsToRetrieve = [])
     {
-        return $this->dbConnector->updateDataArray($this->tableName, $aFieldsValues, $aCond, $limit, $lock);
+        return $this->findOneBy($this->primaryKey, $value, $fieldsToRetrieve);
     }
 
     public function findOneBy($field, $value, array $fieldsToRetrieve = [])
@@ -48,21 +55,16 @@ abstract class Table implements Storable
         return $row;
     }
 
-    public function findByPk($value, array $fieldsToRetrieve = [])
+    public function truncate()
     {
-        return $this->findOneBy($this->primaryKey, $value, $fieldsToRetrieve);
+        $query = sprintf('TRUNCATE TABLE `%s`', $this->tableName);
+
+        return $this->dbConnector->execute($query);
     }
 
-    public function findBy($field, $value)
+    public function update(array $data, array $conditions)
     {
-        $rows = $this->dbConnector->getRowsById($this->tableName, $field, $value);
-
-        return $rows;
-    }
-
-    public function add(array $data, $ignore = false)
-    {
-        return $this->dbConnector->insert($this->tableName, $data, false, $ignore);
+        return $this->dbConnector->updateDataArray($this->tableName, $conditions, $aCond, $limit, $lock);
     }
 
 }

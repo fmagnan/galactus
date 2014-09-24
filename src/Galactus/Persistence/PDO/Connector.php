@@ -569,7 +569,7 @@ class Connector
      *
      * @return bool
      */
-    public function updateDataArray($sTable, array $aFieldsValues, array $aCond = array(), $limit = 0, $lock = false)
+    public function updateDataArray($sTable, array $aFieldsValues, array $aCond = array())
     {
         $sCond = '';
         if (is_array($aCond)) {
@@ -582,7 +582,7 @@ class Connector
                 $bFirst = false;
             }
         }
-        return $this->updateData($sTable, $aFieldsValues, $sCond, $limit, $lock);
+        return $this->updateData($sTable, $aFieldsValues, $sCond);
     }
 
     /**
@@ -594,7 +594,7 @@ class Connector
      *
      * @return bool
      */
-    public function updateData($sTable, array $aFieldsValues, $sCond, $limit = 0, $lock = false)
+    public function updateData($sTable, array $aFieldsValues, $sCond)
     {
         // Get fields to update, if none then exit
         $aFields = array_keys($aFieldsValues);
@@ -620,14 +620,8 @@ class Connector
         if (!empty($sCond)) {
             $sReq .= ' WHERE ' . $sCond;
         }
-        $sReq .= (is_int($limit) && $limit > 0) ? sprintf(' LIMIT %s', $limit) : '';
-        if ($lock) {
-            $this->lock($sTable);
-        }
         $this->execute($sReq, $aVals)->closeCursor();
-        if ($lock) {
-            $this->unlock();
-        }
+
         return true;
     }
 

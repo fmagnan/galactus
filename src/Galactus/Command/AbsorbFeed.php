@@ -8,16 +8,19 @@ use GuzzleHttp\Client;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class AbsorbFeed extends Command
 {
-    protected $db;
+    protected $feedRepository;
+    protected $postRepository;
 
     public function __construct($db)
     {
         parent::__construct();
-        $this->db = $db;
+        $this->feedRepository = new Feed($db);
+        $this->postRepository = new Post($db);
     }
 
     protected function configure()
@@ -25,18 +28,21 @@ class AbsorbFeed extends Command
         $this
             ->setName('galactus:absorb')
             ->setDescription('Absorb rss feed')
-            ->addArgument('feed', InputArgument::OPTIONAL, 'Enter id of feed you want to absorb');
+            ->addArgument('feed', InputArgument::OPTIONAL, 'Enter id of feed you want to absorb')
+            ->addOption('truncate', null, InputOption::VALUE_NONE, 'If set, posts table will be truncated');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        if ($input->getOption('truncate')) {
+            $this->postRepository->truncate();
+        }
         $feedId = $input->getArgument('feed');
-        $feedRepository = new Feed($this->db);
         if ($feedId) {
-            $feed = $feedRepository->findByPk($feedId);
+            $feed = $this->feedRepository->findByPk($feedId);
             $this->absorbFeed($output, $feed);
         } else {
-            $feeds = $feedRepository->findBy('isEnabled', 1);
+            $feeds = $this->feedRepository->findBy('isEnabled', 1);
             foreach ($feeds as $feed) {
                 $this->absorbFeed($output, $feed);
             }
@@ -51,20 +57,19 @@ class AbsorbFeed extends Command
 
         $output->writeln('fetching ' . $feed['url']);
 
-        $postRepository = new Post($this->db);
-
         foreach ($xml->channel->item as $post) {
             $output->writeln('adding new post: ' . $post->title);
-            $queryParts = parse_url($post->link);
-            $params = explode('=', $queryParts['query']);
-            $remoteId = $params[1];
 
-            $postRepository->add(
+            $date = new \DateTime($post->pubDate, new \DateTimeZone('UTC'));
+
+            $remoteIdContainerField = property_exists($post, 'guid') ? 'guid' : 'link';
+
+            $this->postRepository->add(
                 [
                     'blogId' => $feed['id'],
-                    'remoteId' => $remoteId,
+                    'remoteId' => $this->extractRemoteIdFrom($post->{$remoteIdContainerField}),
                     'title' => $post->title,
-                    'creationDate' => $post->pubDate,
+                    'creationDate' => $date->format('Y-m-d h:i:s'),
                     'description' => $post->description,
                     'content' => $post->children('content', true)->encoded,
                     'url' => $post->link
@@ -72,6 +77,18 @@ class AbsorbFeed extends Command
                 true
             );
         }
+    }
+
+    protected function extractRemoteIdFrom($link)
+    {
+        $queryParts = parse_url($link);
+        if (!isset($queryParts['query'])) {
+            return 0;
+        }
+        $params = explode('=', $queryParts['query']);
+        $remoteId = $params[1];
+
+        return $remoteId;
     }
 
 }
