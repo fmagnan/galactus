@@ -2,8 +2,6 @@
 
 namespace Galactus\Persistence\PDO;
 
-use Galactus\Persistence\Storable;
-
 class Connector
 {
     const INSERT_IGNORE = 1;
@@ -12,31 +10,16 @@ class Connector
     const CHARSET_UTF8 = 'UTF8';
 
     protected $pdo;
-    protected $host;
-    protected $user;
-    protected $pass;
-    protected $database;
     protected $lastPdoStatement;
 
     /**
      * Create a PDOMySQL instance
      */
-    public function __construct($host, $user, $pass, $dbName, $charset = 'utf8')
+    public function __construct(array $params)
     {
-        $this->host = $host;
-        $this->user = $user;
-        $this->pass = $pass;
-        $this->database = $dbName;
-        // dynamic port detection
-        $port = '';
-        if (strpos($host, ':') !== false) {
-            list($host, $port) = explode(':', $host);
-        }
-        $options = [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES "' . $charset . '"'];
-        // connexion to database with PDO
-        $dsnMask = 'mysql:dbname=%s;host=%s;%s';
-        $dsn = sprintf($dsnMask, $dbName, $host, empty($port) ? '' : ';port=' . $port);
-        $this->pdo = new \PDO($dsn, $user, $pass, $options);
+        $dsn = sprintf('mysql:dbname=%s;host=%s;', $params['dbName'], $params['host']);
+        $options = [\PDO::MYSQL_ATTR_INIT_COMMAND => sprintf('SET NAMES "%s"', $params['charset'])];
+        $this->pdo = new \PDO($dsn, $params['user'], $params['pass'], $options);
     }
 
     /**
@@ -45,78 +28,6 @@ class Connector
     public function rowCount(\PDOStatement $mRes)
     {
         return $mRes->rowCount();
-    }
-
-    /**
-     * [Deprecated] Retrocompatibility for MySQL object
-     * Create a delete query string and execute it
-     * @param $table name of table
-     * @param $where string clause where to limit the query
-     * @param $lock
-     * @return boolean if query was ok
-     */
-    public function delete($table, $where = null, $lock = false)
-    {
-        $rqt = false;
-        if (!empty($table)) {
-            if ($lock) {
-                $this->lock($table);
-            }
-            $query = sprintf('DELETE FROM `%s` WHERE %s', $table, $where);
-            $rqt = $this->execute($query)->closeCursor();
-            if ($lock) {
-                $this->unlock();
-            }
-        }
-        return $rqt;
-    }
-
-    /**
-     * Retrocompatibility for MySQL object
-     */
-    public function errno()
-    {
-        return $this->pdo->errorCode();
-    }
-
-    /**
-     * Retrocompatibility for MySQL object
-     */
-    public function error()
-    {
-        return $this->pdo->errorInfo();
-    }
-
-    /**
-     * Retrocompatibility for MySQL object
-     * Fetches the next row from a result set
-     * returns an array indexed by column name as returned in your result set
-     */
-    public function fetch_assoc(\PDOStatement $mRes)
-    {
-        return $this->fetch($mRes, \PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * Retrocompatibility for MySQL object
-     * Fetches the next row from a result set
-     * returns an array indexed by column number as returned in your result set, starting at column 0
-     */
-    public function fetch_row(\PDOStatement $mRes)
-    {
-        return $this->fetch($mRes, \PDO::FETCH_NUM);
-    }
-
-    /**
-     * Experimental, retrocompatibility for MySQL object
-     * Returns metadata for a column in a result set
-     */
-    public function field_name($index, \PDOStatement $mRes)
-    {
-        $meta = $mRes->getColumnMeta($index);
-        $name = $meta['name'];
-
-        return $name;
     }
 
     /**
@@ -139,28 +50,6 @@ class Connector
     }
 
     /**
-     * [Deprecated] retrocompatibility for MySQL object
-     * Fetches the first row from a query
-     */
-    public function getRow($query, $fetchAssoc = true)
-    {
-        $style = $fetchAssoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_NUM;
-        return $this->fetchOne($query, array(), $style);
-    }
-
-    /**
-     * Retrocompatibility for MySQL object
-     * Fetches a row
-     */
-    public function getRowById($table, $field, $value, $fetchAssoc = true)
-    {
-        $style = $fetchAssoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_NUM;
-        $query = 'SELECT * FROM `' . $table . '` WHERE `' . $field . '`=?';
-        $sta = $this->execute($query, $value);
-        return $sta->fetch($style);
-    }
-
-    /**
      * Retrocompatibility for MySQL object
      * Fetches multiple rows
      */
@@ -170,74 +59,6 @@ class Connector
         $query = 'SELECT * FROM `' . $table . '` WHERE `' . $field . '`=?';
         $sta = $this->execute($query, array($value));
         return $sta->fetchAll($style);
-    }
-
-    /**
-     * [Deprecated] retrocompatibility for MySQL object
-     * Fetches multiple rows from a query
-     */
-    public function getRows($query, $fetchAssoc = true)
-    {
-        $style = ($fetchAssoc) ? \PDO::FETCH_ASSOC : \PDO::FETCH_NUM;
-        return $this->fetchAll($query, array(), $style);
-    }
-
-    /**
-     * [Deprecated] Retrocompatibility for MySQL object
-     */
-    private function getDBList($req, $uniqueCol)
-    {
-        $result = array();
-        $sta = $this->execute($req);
-        if ($uniqueCol) {
-            while ($r = $this->fetch_row($sta)) {
-                $result[] = $r[0];
-            }
-        } else {
-            while ($r = $this->fetch_assoc($sta)) {
-                $result[] = $r;
-            }
-        }
-        return $result;
-    }
-
-    /**
-     * @deprecated
-     * [Deprecated] Retrocompatibility for MySQL object
-     * Prends un tableau qu'il retourne sous forme de string pr�fix� de WHERE / AND
-     * Dans le cas d'un OR, le tableau doit contenir une entr�e de type :
-     * ( nom = 'toto' OR prenom = 'tata' )
-     *
-     * @param array $where
-     * @return string
-     */
-    public function getWhere($where = array())
-    {
-        if (!is_array($where)) {
-            return '';
-        }
-        if (count($where) == 0) {
-            return '';
-        }
-        return 'WHERE ' . implode(' AND ', $where);
-    }
-
-    /**
-     * Check if the specified table exists
-     */
-    public function tableExists($tableName)
-    {
-        $res = $this->execute("SHOW TABLES LIKE '$tableName'");
-        return ($this->num_rows($res) !== 0);
-    }
-
-    /**
-     * Retrocompatibility for MySQL object
-     * Return an array with tables which have the same parent prefix
-     */
-    public function getTableFamily($parent)
-    {
-        return $this->getDBList("SHOW TABLES LIKE '$parent%'", true);
     }
 
     /**
@@ -255,157 +76,12 @@ class Connector
     }
 
     /**
-     * Retrocompatibility for MySQL object
-     * Returns the ID of the last inserted row or sequence value
+     * Check if the specified table exists
      */
-    public function insert_id()
+    public function tableExists($tableName)
     {
-        return $this->lastInsertId();
-    }
-
-    /**
-     * @deprecated
-     * Retrocompatibility for MySQL object
-     * Create a query string and execute it
-     */
-    public function insertupdate($type, $table, array $datas, $where = null, $lock = false)
-    {
-        if ($type == 'INSERT') {
-            return $this->insertData($table, $datas, false, true, $lock);
-        } elseif ($type == 'UPDATE') {
-            return $this->updateData($table, $datas, $where, 0, $lock);
-        }
-    }
-
-    /**
-     * Lock specified table
-     */
-    public function lock($table)
-    {
-        $query = sprintf('LOCK TABLES %s WRITE', $table);
-        return ($this->execute($query)->closeCursor());
-    }
-
-    /**
-     * Log into file the string in param
-     */
-    public function log($rqt, $params = array())
-    {
-        if (preg_match('/(insert|update)/i', $rqt)) {
-            $logMysql = fopen(PATH . '/www/' . $this->user . ".sql", "a+");
-            $rqt = str_replace("\t", '', $rqt);
-            fputs($logMysql, "############\n");
-            fputs($logMysql, $rqt . ';');
-            if (count($params > 0)) {
-                fputs($logMysql, "\n" . print_r($params, true));
-            }
-            fputs($logMysql, "\n");
-            fclose($logMysql);
-        }
-    }
-
-    /**
-     * [Deprecated] Not compatible with MySQL object
-     */
-    public function num_fields($r = false)
-    {
-        $count = $r->columnCount();
-
-        return $count;
-    }
-
-    /**
-     * Retrocompatibility for MySQL object
-     * Return number of rows for the current result set
-     */
-    public function num_rows(\PDOStatement $rqt)
-    {
-        return $this->rowCount($rqt);
-    }
-
-    /**
-     * Retrocompatibility for MySQL object
-     * Make a simple SELECT to check if database is up
-     */
-    public function ping()
-    {
-        try {
-            $this->pdo->query('SELECT 1');
-        } catch (\PDOException $e) {
-            self::onError($this->pdo);
-        }
-        return true;
-    }
-
-    /**
-     * Retrocompatibility for MySQL object
-     * This method is an alias of PDOMySQL::execute
-     *
-     * @param string $query
-     *
-     * @return \PDOStatement
-     */
-    public function query($query)
-    {
-        return $this->execute($query);
-    }
-
-    /**
-     * [Deprecated] Retrocompatibility for MySQL object
-     * Return infos in array for specified query string
-     */
-    public function select_hash($table, $where = '')
-    {
-        $query = sprintf('SELECT * FROM `%s` WHERE %s', $table, ($where ? $where : 1));
-        return $this->fetchAll($query);
-    }
-
-    /**
-     * Retrocompatibility for MySQL object
-     * Truncate the specified table
-     */
-    public function truncate($table)
-    {
-        return $this->execute("TRUNCATE TABLE `$table`");
-    }
-
-    /**
-     * Retrocompatibility for MySQL object
-     * Execute an unbuffered query
-     */
-    public function unbuffered_query($query)
-    {
-        $this->pdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
-        $r = $this->execute($query);
-        $this->pdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
-        return $r;
-    }
-
-    /**
-     * Unlock specified table
-     */
-    public function unlock()
-    {
-        return ($this->execute('UNLOCK TABLES')->closeCursor());
-    }
-
-    /**
-     * Retrocompatibility for MySQL object
-     * Create an update query string and execute it
-     */
-    public function update($table, $datas, $where = '', $lock = false)
-    {
-        return $this->updateData($table, $datas, $where, 0, $lock);
-    }
-
-    /**
-     * Retrocompatibility for MySQL object
-     * Create an update query string on a key/value and execute it
-     */
-    public function updateRowById($table, $datas, $key, $value, $limit = 0, $lock = false)
-    {
-        $where = sprintf('`%s`=%s', $key, $this->escape($value));
-        return $this->updateData($table, $datas, $where, $limit, $lock);
+        $res = $this->execute("SHOW TABLES LIKE '$tableName'");
+        return ($this->num_rows($res) !== 0);
     }
 
     /**
@@ -749,47 +425,6 @@ class Connector
     protected function getLastPdoStatement()
     {
         return $this->lastPdoStatement;
-    }
-
-    protected function getDatabase()
-    {
-        return $this->database;
-    }
-
-    protected function getHost()
-    {
-        return $this->host;
-    }
-
-    protected function getPass()
-    {
-        return $this->pass;
-    }
-
-    protected function getPdo()
-    {
-        return $this->pdo;
-    }
-
-    protected function getUser()
-    {
-        return $this->user;
-    }
-
-    /**
-     * Get login information.
-     */
-    public function getInfo($param)
-    {
-        $info = array(
-            'host' => $this->host,
-            'user' => $this->user,
-            'base' => $this->database
-        );
-        if (!isset($info[$param])) {
-            return '';
-        }
-        return $info[$param];
     }
 
     /**

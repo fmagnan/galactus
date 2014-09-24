@@ -42,7 +42,7 @@ class AbsorbFeed extends Command
             $feed = $this->feedRepository->findByPk($feedId);
             $this->absorbFeed($output, $feed);
         } else {
-            $feeds = $this->feedRepository->findBy('isEnabled', 1);
+            $feeds = $this->feedRepository->findAllActiveFeeds();
             foreach ($feeds as $feed) {
                 $this->absorbFeed($output, $feed);
             }
