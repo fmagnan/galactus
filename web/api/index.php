@@ -11,5 +11,5 @@ $dbConnector = new Connector($settings['database']);
 
 Server::create('/', new Frontend($dbConnector))
     ->addGetRoute('feeds', 'feeds')
-    ->addGetRoute('posts/([0-9]+)', 'posts')
+    ->addGetRoute('posts', 'posts')
     ->run();

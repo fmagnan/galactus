@@ -23,10 +23,10 @@ class Frontend
         return $feeds;
     }
 
-    public function posts($feed = '1')
+    public function posts()
     {
         $postRepository = new Post($this->db);
-        $posts = $postRepository->findAllForFeed($feed);
+        $posts = $postRepository->all();
 
         return $posts;
     }
