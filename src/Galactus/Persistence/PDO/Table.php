@@ -31,9 +31,9 @@ abstract class Table implements Storable
         return $statement->fetchAll($fetchStyle);
     }
 
-    public function findBy($field, $value)
+    public function findBy($field, $value, $fetchStyle = \PDO::FETCH_ASSOC, $fetchArgument = false)
     {
-        $rows = $this->dbConnector->getRowsById($this->tableName, $field, $value);
+        $rows = $this->dbConnector->getRowsById($this->tableName, $field, $value, $fetchStyle, $fetchArgument);
 
         return $rows;
     }

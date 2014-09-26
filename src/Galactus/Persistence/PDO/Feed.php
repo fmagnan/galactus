@@ -10,7 +10,7 @@ class Feed extends Table
         parent::__construct($connector, 'feeds', 'id');
     }
 
-    public function findAllActiveFeeds()
+    public function findActives()
     {
         return $this->findBy('isEnabled', 1);
     }

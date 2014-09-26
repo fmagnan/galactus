@@ -10,9 +10,9 @@ class Post extends Table
         parent::__construct($connector, 'posts', 'id');
     }
 
-    public function findAllForFeed($feed)
+    public function findActives()
     {
-        return $this->findBy('feedId', $feed);
+        return $this->all();
     }
 
 }

@@ -18,7 +18,7 @@ class Frontend
     public function feeds()
     {
         $feedRepository = new Feed($this->db);
-        $feeds = $feedRepository->findAllActiveFeeds();
+        $feeds = $feedRepository->findActives();
 
         return $feeds;
     }
@@ -26,7 +26,7 @@ class Frontend
     public function posts()
     {
         $postRepository = new Post($this->db);
-        $posts = $postRepository->all();
+        $posts = $postRepository->findActives();
 
         return $posts;
     }

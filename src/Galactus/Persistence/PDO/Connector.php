@@ -53,12 +53,15 @@ class Connector
      * Retrocompatibility for MySQL object
      * Fetches multiple rows
      */
-    public function getRowsById($table, $field, $value, $fetchAssoc = true)
+    public function getRowsById($table, $field, $value, $fetchStyle = \PDO::FETCH_ASSOC, $fetchArgument = false)
     {
-        $style = $fetchAssoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_NUM;
-        $query = 'SELECT * FROM `' . $table . '` WHERE `' . $field . '`=?';
-        $sta = $this->execute($query, array($value));
-        return $sta->fetchAll($style);
+        $mask = 'SELECT * FROM `%s` WHERE `%s`=?';
+        $query = sprintf($mask, $table, $field);
+        $statement = $this->execute($query, [$value]);
+        if ($fetchArgument) {
+            return $statement->fetchAll($fetchStyle, $fetchArgument);
+        }
+        return $statement->fetchAll($fetchStyle);
     }
 
     /**
@@ -71,7 +74,7 @@ class Connector
      */
     public function insert($table, array $datas, $lock = false, $ignore = false)
     {
-        $iSpecial = ($ignore) ? self::INSERT_IGNORE : false;
+        $iSpecial = $ignore ? self::INSERT_IGNORE : false;
         return $this->insertData($table, $datas, $iSpecial, true, $lock);
     }
 
