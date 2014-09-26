@@ -11,3 +11,14 @@ INSERT INTO `feeds` (`id`, `name`, `url`, `isEnabled`) VALUES
 (10,	'Editions Sans-Détour',	'http://sans-detour.com/index.php/rss.html',	0),
 (11,	'Edge Entertainment',	'http://www.edgeent.com/home/feed',	0),
 (12,	'Places to Go, People to Be',	'http://feeds.feedburner.com/PTGPTBvf',	1);
+
+INSERT INTO `feed_x_tag` (`feedId`, `tagId`) VALUES
+(1,	1),
+(2,	1),
+(3,	1),
+(5,	1),
+(5,	2);
+
+INSERT INTO `tags` (`id`, `name`) VALUES
+(1,	'jdr'),
+(2,	'podcast');

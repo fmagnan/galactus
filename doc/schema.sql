@@ -25,3 +25,20 @@ CREATE TABLE `posts` (
   UNIQUE KEY `feedId_remoteId` (`feedId`,`remoteId`),
   CONSTRAINT `posts_ibfk_1` FOREIGN KEY (`feedId`) REFERENCES `feeds` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `tags`;
+CREATE TABLE `tags` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `feed_x_tag`;
+CREATE TABLE `feed_x_tag` (
+  `feedId` bigint(20) NOT NULL,
+  `tagId` int(11) NOT NULL,
+  PRIMARY KEY (`feedId`,`tagId`),
+  KEY `tagId` (`tagId`),
+  CONSTRAINT `feed_x_tag_ibfk_4` FOREIGN KEY (`tagId`) REFERENCES `tags` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `feed_x_tag_ibfk_3` FOREIGN KEY (`feedId`) REFERENCES `feeds` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
