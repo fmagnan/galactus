@@ -3,6 +3,11 @@
 SET NAMES utf8;
 SET time_zone = '+00:00';
 
+DROP TABLE IF EXISTS `feed_x_tag`;
+DROP TABLE IF EXISTS `posts`;
+DROP TABLE IF EXISTS `tags`;
+DROP TABLE IF EXISTS `feeds`;
+
 CREATE TABLE `feeds` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
@@ -11,7 +16,6 @@ CREATE TABLE `feeds` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `posts`;
 CREATE TABLE `posts` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `feedId` bigint(20) NOT NULL,
@@ -26,14 +30,12 @@ CREATE TABLE `posts` (
   CONSTRAINT `posts_ibfk_1` FOREIGN KEY (`feedId`) REFERENCES `feeds` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `tags`;
 CREATE TABLE `tags` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(30) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `feed_x_tag`;
 CREATE TABLE `feed_x_tag` (
   `feedId` bigint(20) NOT NULL,
   `tagId` int(11) NOT NULL,
