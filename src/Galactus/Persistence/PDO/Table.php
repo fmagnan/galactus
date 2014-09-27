@@ -24,11 +24,18 @@ abstract class Table implements Storable
         return $this->dbConnector->insert($this->tableName, $data, false, $ignore);
     }
 
-    public function all($fetchStyle = \PDO::FETCH_ASSOC)
+    public function all($limit, $offset, $fetchStyle = \PDO::FETCH_ASSOC)
     {
-        $query = sprintf('SELECT * FROM `%s`', $this->tableName);
+        $query = sprintf('SELECT * FROM `%s` LIMIT %d OFFSET %d', $this->tableName, $limit, $offset);
         $statement = $this->dbConnector->execute($query);
         return $statement->fetchAll($fetchStyle);
+    }
+
+    public function countAll()
+    {
+        $query = sprintf('SELECT COUNT(`%s`) FROM `%s`', $this->primaryKey, $this->tableName);
+        $statement = $this->dbConnector->query($query);
+        return $statement->fetchColumn();
     }
 
     public function findBy($field, $value, $fetchStyle = \PDO::FETCH_ASSOC, $fetchArgument = false)

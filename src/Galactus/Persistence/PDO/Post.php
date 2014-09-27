@@ -10,9 +10,14 @@ class Post extends Table
         parent::__construct($connector, 'posts', 'id');
     }
 
-    public function findActives()
+    public function findActives($limit = 50, $offset = 0)
     {
-        return $this->all();
+        return $this->all($limit, $offset);
+    }
+
+    public function findActivesCount()
+    {
+        return $this->countAll();
     }
 
 }

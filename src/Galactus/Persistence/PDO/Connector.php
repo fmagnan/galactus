@@ -495,4 +495,9 @@ class Connector
     {
         return !is_null($this->pdo) && false !== $this->pdo;
     }
+
+    public function query($query)
+    {
+        return $this->pdo->query($query);
+    }
 }

@@ -8,6 +8,8 @@ use Galactus\Persistence\PDO\Post;
 class Frontend
 {
 
+    const MAX_LIMIT_FOR_DATABASE_QUERIES = 50;
+
     protected $db;
 
     public function __construct($db)
@@ -26,7 +28,12 @@ class Frontend
     public function posts()
     {
         $postRepository = new Post($this->db);
-        $posts = $postRepository->findActives();
+
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : self::MAX_LIMIT_FOR_DATABASE_QUERIES;
+        $limit = min($limit, self::MAX_LIMIT_FOR_DATABASE_QUERIES);
+        $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
+
+        $posts = $postRepository->findActives($limit, $offset);
 
         return $posts;
     }
