@@ -1,0 +1,92 @@
+<?php
+
+namespace Galactus\Persistence\PDO;
+
+class QueryBuilder
+{
+    protected $connector;
+    protected $tableName;
+    protected $primaryKey;
+
+    public function __construct(\PDO $connector, $tableName, $primaryKey)
+    {
+        $this->connector = $connector;
+        $this->tableName = $tableName;
+        $this->primaryKey = $primaryKey;
+    }
+
+    public function add(array $data, $ignore = false)
+    {
+        $mask = 'INSERT %s INTO `%s` (%s) VALUES (%s)';
+        $fields = $values = [];
+        foreach ($data as $field => $value) {
+            $fields[] = $field;
+            $values[] = ':' . $field;
+        }
+        $ignoreClause = $ignore ? 'IGNORE' : '';
+        $query = sprintf($mask, $ignoreClause, $this->tableName, implode(',', $fields), implode(',', $values));
+        $this->connector->beginTransaction();
+        $statement = $this->connector->prepare($query);
+        $result = $statement->execute($data);
+        $this->connector->commit();
+
+        return $result;
+    }
+
+    public function findActiveFeeds()
+    {
+        $query = 'SELECT `f`.*, GROUP_CONCAT(DISTINCT `t`.`name`) AS `tags`
+                FROM `feeds` `f`
+                LEFT JOIN `feed_x_tag` `ft` ON `f`.`id`=`ft`.`feedId`
+                LEFT JOIN `tags` `t` ON `ft`.`tagId`=`t`.`id`
+                WHERE `f`.`isEnabled` = 1
+                GROUP BY `f`.`id`';
+        $this->connector->beginTransaction();
+        $statement = $this->connector->query($query);
+        $feeds = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $this->connector->commit();
+
+        return $feeds;
+    }
+
+    public function findActivePosts(array $conditions = [], $limit, $offset)
+    {
+        $mask = 'SELECT * FROM `%s` WHERE 1 %s LIMIT %d OFFSET %d';
+        $where = '';
+        foreach ($conditions as $key => $value) {
+            $where .= sprintf('AND `%s`=:%s', $key, $key);
+        }
+        $query = sprintf($mask, $this->tableName, $where, $limit, $offset);
+        $this->connector->beginTransaction();
+        $statement = $this->connector->prepare($query);
+        $statement->execute($conditions);
+        $posts = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $this->connector->commit();
+
+        return $posts;
+    }
+
+    public function findByPk($value)
+    {
+        $mask = 'SELECT * FROM `%s` WHERE `%s`=:primary_key LIMIT 1';
+        $query = sprintf($mask, $this->tableName, $this->primaryKey);
+        $this->connector->beginTransaction();
+        $statement = $this->connector->prepare($query);
+        $statement->execute(['primary_key' => $value]);
+        $row = $statement->fetch();
+        $this->connector->commit();
+
+        return $row;
+    }
+
+    public function truncate()
+    {
+        $query = 'TRUNCATE TABLE ' . $this->tableName;
+        $this->connector->beginTransaction();
+        $statement = $this->connector->prepare($query);
+        $result = $statement->execute();
+        $this->connector->commit();
+
+        return $result;
+    }
+}

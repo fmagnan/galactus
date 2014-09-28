@@ -2,8 +2,7 @@
 
 namespace Galactus\Command;
 
-use Galactus\Persistence\PDO\Feed;
-use Galactus\Persistence\PDO\Post;
+use Galactus\Persistence\PDO\QueryBuilder;
 use GuzzleHttp\Client;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -19,8 +18,8 @@ class AbsorbFeed extends Command
     public function __construct($db)
     {
         parent::__construct();
-        $this->feedRepository = new Feed($db);
-        $this->postRepository = new Post($db);
+        $this->feedRepository = new QueryBuilder($db, 'feeds', 'id');
+        $this->postRepository = new QueryBuilder($db, 'posts', 'id');
     }
 
     protected function configure()
@@ -42,7 +41,7 @@ class AbsorbFeed extends Command
             $feed = $this->feedRepository->findByPk($feedId);
             $this->absorbFeed($output, $feed);
         } else {
-            $feeds = $this->feedRepository->findActives();
+            $feeds = $this->feedRepository->findActiveFeeds();
             foreach ($feeds as $feed) {
                 $this->absorbFeed($output, $feed);
             }
