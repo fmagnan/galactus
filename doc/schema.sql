@@ -12,6 +12,7 @@ CREATE TABLE `feeds` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   `url` varchar(255) NOT NULL,
+  `type` tinyint(4) NOT NULL DEFAULT '2' COMMENT '0=atom,1=rss,2=rss2',
   `isEnabled` tinyint(3) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

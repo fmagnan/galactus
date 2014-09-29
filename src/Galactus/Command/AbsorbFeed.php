@@ -2,6 +2,10 @@
 
 namespace Galactus\Command;
 
+use Galactus\Domain\Feed;
+use Galactus\Parse\Atom;
+use Galactus\Parse\Rss;
+use Galactus\Parse\Rss2;
 use Galactus\Persistence\PDO\QueryBuilder;
 use GuzzleHttp\Client;
 use Symfony\Component\Console\Command\Command;
@@ -53,38 +57,19 @@ class AbsorbFeed extends Command
         $guzzle = new Client();
         $response = $guzzle->get($feed['url']);
         $xml = $response->xml();
-
         $output->writeln('fetching ' . $feed['url']);
-
-        foreach ($xml->channel->item as $post) {
-            $output->writeln('adding new post: ' . $post->title);
-
-            $date = new \DateTime($post->pubDate, new \DateTimeZone('UTC'));
-            $creationDate = $date->format('Y-m-d h:i:s');
-
-            $description = $this->filterText($post->description);
-            $content = $this->filterText($post->children('content', true)->encoded);
-
-            $this->postRepository->add(
-                [
-                    'feedId' => $feed['id'],
-                    'remoteId' => md5($post->link),
-                    'title' => $post->title,
-                    'creationDate' => $creationDate,
-                    'description' => $description,
-                    'content' => $content,
-                    'url' => $post->link
-                ],
-                true
-            );
+        if (Feed::TYPE_ATOM === $feed['type']) {
+            $parser = new Atom($xml);
+        } elseif (Feed::TYPE_RSS === $feed['type']) {
+            $parser = new Rss($xml);
+        } else {
+            $parser = new Rss2($xml);
         }
-    }
 
-    protected function filterText($string)
-    {
-        $string = html_entity_decode($string);
-
-        return $string;
+        foreach ($parser->extractPost($feed['id']) as $data) {
+            $output->writeln('+ ' . $data['title']);
+            $this->postRepository->add($data, true);
+        }
     }
 
 }
