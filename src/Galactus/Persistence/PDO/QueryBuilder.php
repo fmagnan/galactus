@@ -51,12 +51,18 @@ class QueryBuilder
 
     public function findActivePosts(array $conditions = [], $limit, $offset)
     {
-        $mask = 'SELECT * FROM `%s` WHERE 1 %s LIMIT %d OFFSET %d';
+        $mask = 'SELECT `p`.`feedId`, `p`.`title`, `p`.`url`, `p`.`creationDate`,
+                `p`.`description`, `p`.`content`, `f`.`name` AS `feedName`
+                FROM `posts` `p`
+                JOIN `feeds` `f` ON `p`.`feedId`=`f`.`id`
+                WHERE 1 %s
+                ORDER BY `p`.`creationDate` DESC
+                LIMIT %d OFFSET %d';
         $where = '';
         foreach ($conditions as $key => $value) {
             $where .= sprintf('AND `%s`=:%s', $key, $key);
         }
-        $query = sprintf($mask, $this->tableName, $where, $limit, $offset);
+        $query = sprintf($mask, $where, $limit, $offset);
         $this->connector->beginTransaction();
         $statement = $this->connector->prepare($query);
         $statement->execute($conditions);
