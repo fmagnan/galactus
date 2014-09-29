@@ -54,13 +54,21 @@ class AbsorbFeed extends Command
 
     protected function absorbFeed(OutputInterface $output, array $feed)
     {
+        $options = [
+            'headers' => [
+                'User-Agent' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:11.0) Gecko/20100101 Firefox/11.0'
+            ]
+        ];
         $guzzle = new Client();
-        $response = $guzzle->get($feed['url']);
+        $url = $feed['url'];
+        $response = $guzzle->get($url, $options);
+        $output->writeln('fetching ' . $url);
+        $type = (int)$feed['type'];
         $xml = $response->xml();
-        $output->writeln('fetching ' . $feed['url']);
-        if (Feed::TYPE_ATOM === $feed['type']) {
+
+        if (Feed::TYPE_ATOM === $type) {
             $parser = new Atom($xml);
-        } elseif (Feed::TYPE_RSS === $feed['type']) {
+        } elseif (Feed::TYPE_RSS === $type) {
             $parser = new Rss($xml);
         } else {
             $parser = new Rss2($xml);

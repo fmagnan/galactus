@@ -24,10 +24,10 @@ CREATE TABLE `posts` (
   `title` varchar(100) NOT NULL,
   `url` varchar(255) NOT NULL,
   `creationDate` datetime NOT NULL,
-  `description` text NOT NULL,
   `content` text NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `feedId_remoteId` (`feedId`,`remoteId`),
+  KEY `creationDate` (`creationDate`),
   CONSTRAINT `posts_ibfk_1` FOREIGN KEY (`feedId`) REFERENCES `feeds` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
