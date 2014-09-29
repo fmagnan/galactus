@@ -67,14 +67,14 @@ class AbsorbFeed extends Command
         $xml = $response->xml();
 
         if (Feed::TYPE_ATOM === $type) {
-            $parser = new Atom($xml);
+            $parser = new Atom($xml, $feed['id']);
         } elseif (Feed::TYPE_RSS === $type) {
-            $parser = new Rss($xml);
+            $parser = new Rss($xml, $feed['id']);
         } else {
-            $parser = new Rss2($xml);
+            $parser = new Rss2($xml, $feed['id']);
         }
 
-        foreach ($parser->extractPost($feed['id']) as $data) {
+        foreach ($parser as $data) {
             $output->writeln('+ ' . $data['title']);
             $this->postRepository->add($data, true);
         }

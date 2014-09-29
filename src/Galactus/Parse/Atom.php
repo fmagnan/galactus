@@ -2,34 +2,36 @@
 
 namespace Galactus\Parse;
 
-class Atom
+class Atom implements \Iterator
 {
 
     protected $xml;
+    protected $feedId;
+    protected $position;
 
-    public function __construct(\SimpleXMLElement $xml)
+    public function __construct(\SimpleXMLElement $xml, $feedId)
     {
         $this->xml = $xml;
+        $this->feedId = $feedId;
+        $this->position = 0;
     }
 
-    public function extractPost($feedId)
+    public function extractItem($item)
     {
-        foreach ($this->xml->entry as $post) {
-            $date = new \DateTime($post->published, new \DateTimeZone('UTC'));
-            $creationDate = $date->format('Y-m-d h:i:s');
+        $date = new \DateTime($item->published, new \DateTimeZone('UTC'));
+        $creationDate = $date->format('Y-m-d h:i:s');
 
-            $content = $this->filterText($post->content);
-            $link = $post->link->attributes()->href;
+        $content = $this->filterText($item->content);
+        $link = $item->link->attributes()->href;
 
-            yield [
-                'feedId' => $feedId,
-                'remoteId' => md5($link),
-                'title' => $post->title,
-                'creationDate' => $creationDate,
-                'content' => $content,
-                'url' => $link
-            ];
-        }
+        return [
+            'feedId' => $this->feedId,
+            'remoteId' => md5($link),
+            'title' => $item->title,
+            'creationDate' => $creationDate,
+            'content' => $content,
+            'url' => $link
+        ];
     }
 
     protected function filterText($string)
@@ -39,4 +41,28 @@ class Atom
         return $string;
     }
 
+    public function current()
+    {
+        return $this->extractItem($this->xml->entry[$this->position]);
+    }
+
+    public function valid()
+    {
+        return isset($this->xml->entry[$this->position]);
+    }
+
+    public function next()
+    {
+        $this->position++;
+    }
+
+    public function key()
+    {
+        //@todo
+    }
+
+    public function rewind()
+    {
+        //@todo
+    }
 }
