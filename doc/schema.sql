@@ -19,7 +19,7 @@ CREATE TABLE `feeds` (
 CREATE TABLE `posts` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `feedId` bigint(20) NOT NULL,
-  `remoteId` bigint(20) NOT NULL,
+  `remoteId` varchar(32) NOT NULL,
   `title` varchar(100) NOT NULL,
   `url` varchar(255) NOT NULL,
   `creationDate` datetime NOT NULL,

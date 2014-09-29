@@ -62,16 +62,13 @@ class AbsorbFeed extends Command
             $date = new \DateTime($post->pubDate, new \DateTimeZone('UTC'));
             $creationDate = $date->format('Y-m-d h:i:s');
 
-            $remoteIdContainerField = property_exists($post, 'guid') ? 'guid' : 'link';
-            $remoteId = $this->extractRemoteIdFrom($post->{$remoteIdContainerField});
-
             $description = $this->filterText($post->description);
             $content = $this->filterText($post->children('content', true)->encoded);
 
             $this->postRepository->add(
                 [
                     'feedId' => $feed['id'],
-                    'remoteId' => $remoteId,
+                    'remoteId' => md5($post->link),
                     'title' => $post->title,
                     'creationDate' => $creationDate,
                     'description' => $description,
@@ -88,18 +85,6 @@ class AbsorbFeed extends Command
         $string = html_entity_decode($string);
 
         return $string;
-    }
-
-    protected function extractRemoteIdFrom($link)
-    {
-        $queryParts = parse_url($link);
-        if (!isset($queryParts['query'])) {
-            return 0;
-        }
-        $params = explode('=', $queryParts['query']);
-        $remoteId = $params[1];
-
-        return $remoteId;
     }
 
 }
