@@ -51,7 +51,8 @@ class QueryBuilder
 
     public function findActivePosts(array $conditions = [], $limit, $offset)
     {
-        $mask = 'SELECT `p`.`feedId`, `p`.`title`, `p`.`url`, `p`.`creationDate`,
+        $mask = 'SELECT `p`.`feedId`, `p`.`title`, `p`.`url`,
+                DATE_FORMAT(`p`.`creationDate`, "%%Y-%%m-%%e") AS `creationDate`,
                 `p`.`description`, `p`.`content`, `f`.`name` AS `feedName`
                 FROM `posts` `p`
                 JOIN `feeds` `f` ON `p`.`feedId`=`f`.`id`
