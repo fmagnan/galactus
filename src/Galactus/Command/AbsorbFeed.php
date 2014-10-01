@@ -8,6 +8,7 @@ use Galactus\Parse\Rss;
 use Galactus\Parse\Rss2;
 use Galactus\Persistence\PDO\QueryBuilder;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\TransferException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -61,10 +62,15 @@ class AbsorbFeed extends Command
         ];
         $guzzle = new Client();
         $url = $feed['url'];
-        $response = $guzzle->get($url, $options);
         $output->writeln('fetching ' . $url);
+        try {
+            $response = $guzzle->get($url, $options);
+            $xml = $response->xml();
+        } catch (TransferException $e) {
+            $output->writeln('<error>' . $e->getMessage() . '</error>');
+            return;
+        }
         $type = (int)$feed['type'];
-        $xml = $response->xml();
 
         if (Feed::TYPE_ATOM === $type) {
             $parser = new Atom($xml, $feed['id']);
