@@ -21,6 +21,8 @@ class Atom implements \Iterator
         $date = new \DateTime($item->published, new \DateTimeZone('UTC'));
         $creationDate = $date->format('Y-m-d h:i:s');
 
+        echo $creationDate;
+
         $content = $this->filterText($item->content);
         $link = $item->link->attributes()->href;
 

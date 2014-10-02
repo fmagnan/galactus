@@ -83,9 +83,13 @@ class AbsorbFeed extends Command
             $parser = new Rss2($xml, $feed['id']);
         }
 
-        foreach ($parser as $data) {
-            $output->writeln('+ ' . $data['title']);
-            $this->postRepository->add($data, true);
+        try {
+            foreach ($parser as $data) {
+                $output->writeln('+ ' . $data['title']);
+                $this->postRepository->add($data, true);
+            }
+        } catch (\Exception $e) {
+            $output->writeln('<error>' . $e->getMessage() . '</error>');
         }
     }
 
