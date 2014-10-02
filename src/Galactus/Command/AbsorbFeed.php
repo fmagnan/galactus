@@ -20,7 +20,7 @@ class AbsorbFeed extends Command
     protected $feedRepository;
     protected $postRepository;
 
-    public function __construct($db)
+    public function __construct(\PDO $db)
     {
         parent::__construct();
         $this->feedRepository = new QueryBuilder($db, 'feeds', 'id');
@@ -43,17 +43,20 @@ class AbsorbFeed extends Command
         }
         $feedId = $input->getArgument('feed');
         if ($feedId) {
-            $feed = $this->feedRepository->findByPk($feedId);
-            $this->absorbFeed($output, $feed);
+            if (false === ($feed = $this->feedRepository->findByPk($feedId))) {
+                $output->writeln('<error>feed id n°' . $feedId . ' does not exist.</error>');
+                return;
+            }
+            $this->absorb($output, $feed);
         } else {
             $feeds = $this->feedRepository->findActiveFeeds();
             foreach ($feeds as $feed) {
-                $this->absorbFeed($output, $feed);
+                $this->absorb($output, $feed);
             }
         }
     }
 
-    protected function absorbFeed(OutputInterface $output, array $feed)
+    protected function absorb(OutputInterface $output, array $feed)
     {
         $options = [
             'headers' => [
