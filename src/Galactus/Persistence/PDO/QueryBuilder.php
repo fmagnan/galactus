@@ -40,7 +40,8 @@ class QueryBuilder
                 LEFT JOIN `feed_x_tag` `ft` ON `f`.`id`=`ft`.`feedId`
                 LEFT JOIN `tags` `t` ON `ft`.`tagId`=`t`.`id`
                 WHERE `f`.`isEnabled` = 1
-                GROUP BY `f`.`id`';
+                GROUP BY `f`.`id`
+                ORDER BY `f`.`name`';
         $this->connector->beginTransaction();
         $statement = $this->connector->query($query);
         $feeds = $statement->fetchAll(\PDO::FETCH_ASSOC);
