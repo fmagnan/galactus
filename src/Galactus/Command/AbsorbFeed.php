@@ -2,18 +2,15 @@
 
 namespace Galactus\Command;
 
-use Galactus\Domain\Feed;
-use Galactus\Parse\Atom;
-use Galactus\Parse\Rss;
-use Galactus\Parse\Rss2;
 use Galactus\Persistence\PDO\QueryBuilder;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\TransferException;
+use PicoFeed\Config;
+use PicoFeed\Logging;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use PicoFeed\Reader;
 
 class AbsorbFeed extends Command
 {
@@ -47,49 +44,57 @@ class AbsorbFeed extends Command
                 $output->writeln('<error>feed id n°' . $feedId . ' does not exist.</error>');
                 return;
             }
-            $this->absorb($output, $feed);
+            $this->absorb($output, $feedId, $feed['url']);
         } else {
             $feeds = $this->feedRepository->findActiveFeeds();
             foreach ($feeds as $feed) {
-                $this->absorb($output, $feed);
+                $this->absorb($output, $feed['id'], $feed['url']);
             }
         }
     }
 
-    protected function absorb(OutputInterface $output, array $feed)
+    protected function writeErrors(OutputInterface $output)
     {
-        $options = [
-            'headers' => [
-                'User-Agent' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:11.0) Gecko/20100101 Firefox/11.0'
-            ]
-        ];
-        $guzzle = new Client();
-        $url = $feed['url'];
-        $output->writeln('fetching ' . $url);
-        try {
-            $response = $guzzle->get($url, $options);
-            $xml = $response->xml();
-        } catch (TransferException $e) {
-            $output->writeln('<error>' . $e->getMessage() . '</error>');
-            return;
+        foreach (Logging::getMessages() as $message) {
+            $output->writeln('<error>' . $message . '</error>');
         }
-        $type = (int)$feed['type'];
+    }
 
-        if (Feed::TYPE_ATOM === $type) {
-            $parser = new Atom($xml, $feed['id']);
-        } elseif (Feed::TYPE_RSS === $type) {
-            $parser = new Rss($xml, $feed['id']);
-        } else {
-            $parser = new Rss2($xml, $feed['id']);
+    protected function absorb(OutputInterface $output, $id, $url)
+    {
+        $config = new Config();
+        $config->setClientUserAgent('Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:11.0) Gecko/20100101 Firefox/11.0');
+
+        $reader = new Reader($config);
+        $reader->download($url);
+
+        $parser = $reader->getParser();
+
+        if ($parser === false) {
+            return $this->writeErrors($output);
         }
 
-        try {
-            foreach ($parser as $data) {
-                $output->writeln('+ ' . $data['title']);
-                $this->postRepository->add($data, true);
-            }
-        } catch (\Exception $e) {
-            $output->writeln('<error>' . $e->getMessage() . '</error>');
+        $feed = $parser->execute();
+        if ($feed === false) {
+            return $this->writeErrors($output);
+        }
+
+        foreach ($feed->items as $item) {
+            $output->writeln('+ ' . $item->title);
+            $data = [
+                'feedId' => $id,
+                'remoteId' => $item->getId(),
+                'title' => $item->getTitle(),
+                'url' => $item->getUrl(),
+                'creationDate' => date('Y-m-d h:i:s', $item->getDate()),
+                'content' => $item->getContent(),
+                /*'language' => $item->getLanguage(),
+                'author' => $item->getAuthor(),
+                'enclosureUrl' => $item->getEnclosureUrl(),
+                'enclosureType' => $item->getEnclosureType(),*/
+            ];
+
+            $this->postRepository->add($data, true);
         }
     }
 
