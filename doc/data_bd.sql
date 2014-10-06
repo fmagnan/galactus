@@ -8,4 +8,6 @@ INSERT INTO `feeds` (`name`, `url`, `isEnabled`) VALUES
 ('Planète BD', 'http://feeds.feedburner.com/PlaneteBdLight',	1),
 ('Chroniques Comics', 'http://feeds.feedburner.com/PlaneteBdLight-ChroniquesComics',	1),
 ('Kana', 'http://www.kana.fr/rss/nouveautes.xml',	1),
-('Comic Book Resources', 'http://www.comicbookresources.com/feed.php?feed=all',	1);
+('Comic Book Resources', 'http://www.comicbookresources.com/feed.php?feed=all',	1),
+('Lewis Trondheim', 'http://www.lewistrondheim.com/blog/rss/fil_rss.xml', 1),
+('Sticky Pants', 'http://lycracacolle.canalblog.com/rss.xml', 1);
