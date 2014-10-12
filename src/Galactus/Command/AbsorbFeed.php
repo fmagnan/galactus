@@ -79,7 +79,11 @@ class AbsorbFeed extends Command
             return $this->writeErrors($output);
         }
 
-        foreach ($feed->items as $item) {
+        foreach ($feed->items as $index => $item) {
+            if ($index == 0) {
+                //update feed
+                $output->writeln('update feed');
+            }
             $output->writeln('+ ' . $item->title);
             $data = [
                 'feedId' => $id,
@@ -88,9 +92,9 @@ class AbsorbFeed extends Command
                 'url' => $item->getUrl(),
                 'creationDate' => date('Y-m-d h:i:s', $item->getDate()),
                 'content' => $item->getContent(),
-                /*'language' => $item->getLanguage(),
+                'lang' => $item->getLanguage(),
                 'author' => $item->getAuthor(),
-                'enclosureUrl' => $item->getEnclosureUrl(),
+                /*'enclosureUrl' => $item->getEnclosureUrl(),
                 'enclosureType' => $item->getEnclosureType(),*/
             ];
 
