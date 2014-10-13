@@ -1,4 +1,4 @@
 galactus
 ========
 
-RSS feed agregator
+Galactus is a RSS feed agregator
