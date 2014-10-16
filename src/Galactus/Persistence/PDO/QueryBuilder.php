@@ -33,6 +33,34 @@ class QueryBuilder
         return $result;
     }
 
+    public function updateByPk(array $data, $pk)
+    {
+        $mask = 'UPDATE `%s` SET %s WHERE `%s`=%d';
+        $dataClause = [];
+        foreach ($data as $field => $value) {
+            $dataClause[] = sprintf('%s=:%s', $field, $field);
+        }
+        $query = sprintf($mask, $this->tableName, implode(',', $dataClause), $this->primaryKey, $pk);
+        $this->connector->beginTransaction();
+        $statement = $this->connector->prepare($query);
+        $result = $statement->execute($data);
+        $this->connector->commit();
+
+        return $result;
+    }
+
+    public function disableFeed($id)
+    {
+        $mask = 'UPDATE `%s` SET `isEnabled`=0 WHERE `%s`=%d';
+        $query = sprintf($mask, $this->tableName, $this->primaryKey, $id);
+        $this->connector->beginTransaction();
+        $statement = $this->connector->prepare($query);
+        $result = $statement->execute();
+        $this->connector->commit();
+
+        return $result;
+    }
+
     public function findActiveFeeds()
     {
         $query = 'SELECT `f`.*, GROUP_CONCAT(DISTINCT `t`.`name`) AS `tags`
@@ -96,5 +124,18 @@ class QueryBuilder
         $this->connector->commit();
 
         return $result;
+    }
+
+    public function last()
+    {
+        $mask = 'SELECT * FROM `%s` ORDER BY `%s` DESC LIMIT %d';
+        $query = sprintf($mask, $this->tableName, 'creationDate', 2);
+        $this->connector->beginTransaction();
+        $statement = $this->connector->prepare($query);
+        $statement->execute();
+        $posts = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $this->connector->commit();
+
+        return $posts;
     }
 }

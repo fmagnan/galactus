@@ -71,19 +71,25 @@ class AbsorbFeed extends Command
         $parser = $reader->getParser();
 
         if ($parser === false) {
+            //$this->feedRepository->disableFeed($id);
             return $this->writeErrors($output);
         }
 
         $feed = $parser->execute();
         if ($feed === false) {
+            //$this->feedRepository->disableFeed($id);
             return $this->writeErrors($output);
         }
 
-        foreach ($feed->items as $index => $item) {
-            if ($index == 0) {
-                //update feed
-                $output->writeln('update feed');
-            }
+        $data = [
+            'lang' => $feed->getLanguage(),
+            'title' => $feed->getTitle(),
+            'feedUri' => $feed->getUrl(),
+            'lastUpdate' => date('Y-m-d h:i:s', $feed->getDate()),
+        ];
+        $this->feedRepository->updateByPk($data, $id);
+
+        foreach ($feed->items as $item) {
             $output->writeln('+ ' . $item->title);
             $data = [
                 'feedId' => $id,
@@ -92,10 +98,7 @@ class AbsorbFeed extends Command
                 'url' => $item->getUrl(),
                 'creationDate' => date('Y-m-d h:i:s', $item->getDate()),
                 'content' => $item->getContent(),
-                'lang' => $item->getLanguage(),
                 'author' => $item->getAuthor(),
-                /*'enclosureUrl' => $item->getEnclosureUrl(),
-                'enclosureType' => $item->getEnclosureType(),*/
             ];
 
             $this->postRepository->add($data, true);

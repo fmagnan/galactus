@@ -13,13 +13,10 @@ CREATE TABLE `feeds` (
   `name` varchar(100) NOT NULL,
   `url` varchar(255) NOT NULL,
   `isEnabled` tinyint(3) NOT NULL DEFAULT '1',
+  `title` varchar(100) NOT NULL,
   `feedUri` varchar(255) NOT NULL,
   `lang` varchar(10) NOT NULL,
   `lastUpdate` datetime NOT NULL,
-  `copyright` varchar (50) NOT NULL,
-  `docs` varchar(255) NOT NULL,
-  `generator` varchar (50) NOT NULL,
-
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

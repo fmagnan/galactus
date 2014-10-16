@@ -41,5 +41,4 @@ class Frontend
 
         return $posts;
     }
-
 }
