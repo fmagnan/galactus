@@ -3,10 +3,24 @@
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/../inc/settings.inc.php';
 
-$postRepository = new \Galactus\Persistence\PDO\QueryBuilder($connector, 'posts', 'id');
+use Galactus\Persistence\PDO\QueryBuilder;
+
+function rss_formatDateToRFC2822($date)
+{
+    return date('r', strtotime($date));
+}
+
+function rss_shorten($text, $length)
+{
+    $pos = strpos($text, ' ', $length);
+    return substr($text, 0, $pos);
+}
+
+$postRepository = new QueryBuilder($connector, 'posts');
 $posts = $postRepository->last();
 
-$foo = '';
+$settingsRepository = new QueryBuilder($connector, 'settings', 'name');
+$settings = $settingsRepository->all();
 
 header('Content-Type: application/xml; charset=utf-8');
 
@@ -21,33 +35,37 @@ echo '<?xml version="1.0" encoding="UTF-8"?>
 >
 
 <channel>
-    <title>' . $foo . '</title>
-    <atom:link href="' . $foo . '" rel="self" type="application/rss+xml" />
-    <link>' . $foo . '</link>
-    <description>' . $foo . '</description>
-    <lastBuildDate>' . $foo . '</lastBuildDate>
-    <language>' . $foo . '</language>
-    <generator>' . $foo . '</generator>';
+    <title>' . $settings['title'] . '</title>
+    <atom:link href="' . $settings['atom_link'] . '" rel="self" type="application/rss+xml" />
+    <link>' . $settings['link'] . '</link>
+    <description>' . $settings['description'] . '</description>
+    <lastBuildDate>' . rss_formatDateToRFC2822($settings['lastBuildDate']) . '</lastBuildDate>
+    <language>' . $settings['language'] . '</language>
+    <generator>' . $settings['generator'] . '</generator>';
+
+$postMask = <<<HEREDOC_NAME
+
+        <item>
+            <title>%s</title>
+            <link>%s</link>
+            <pubDate>%s</pubDate>
+            <dc:creator><![CDATA[%s]]></dc:creator>
+            <guid isPermaLink="false">%s</guid>
+            <description><![CDATA[%s]]></description>
+        </item>
+HEREDOC_NAME;
 
 foreach ($posts as $post) {
-    echo '<item>
-    <title>' . $post['title'] . '</title>
-    <link>' .$post['title'].'</link>
-    <comments>' .$post['title'].'</comments>
-    <pubDate>' .$post['title']/*<?php echo mysql2date('D, d M Y H:i:s +0000', get_post_time('Y-m-d H:i:s', true), false); ?>*/.'</pubDate>
-    <dc:creator><![CDATA[' . $post['title'] . ']]></dc:creator>
-
-    <guid isPermaLink="false">' . $post['title'] . '</guid>
-        <description><![CDATA[' . $post['title'] . ']]></description>
-            <content:encoded><![CDATA[' . $post['title'] . ']]></content:encoded>
-
-    <wfw:commentRss>' . $post['title'] . '</wfw:commentRss>
-    <slash:comments>' . $post['title'] . '</slash:comments>
-    ' ./*<?php rss_enclosure(); ?>*/
-        '
-
-
-</item>';
+    $postContent = sprintf(
+        $postMask,
+        $post['title'],
+        $post['url'],
+        rss_formatDateToRFC2822($post['pubDate']),
+        $post['author'],
+        $post['url'],
+        rss_shorten($post['content'], 250) . ' ...'
+    );
+    echo $postContent;
 }
-echo '</channel>
+echo PHP_EOL . '</channel>
 </rss>';

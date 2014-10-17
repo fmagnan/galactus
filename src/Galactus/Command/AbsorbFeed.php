@@ -16,12 +16,14 @@ class AbsorbFeed extends Command
 {
     protected $feedRepository;
     protected $postRepository;
+    protected $settingsRepository;
 
     public function __construct(\PDO $db)
     {
         parent::__construct();
-        $this->feedRepository = new QueryBuilder($db, 'feeds', 'id');
-        $this->postRepository = new QueryBuilder($db, 'posts', 'id');
+        $this->feedRepository = new QueryBuilder($db, 'feeds');
+        $this->postRepository = new QueryBuilder($db, 'posts');
+        $this->settingsRepository = new QueryBuilder($db, 'settings', 'name');
     }
 
     protected function configure()
@@ -51,6 +53,7 @@ class AbsorbFeed extends Command
                 $this->absorb($output, $feed['id'], $feed['url']);
             }
         }
+        $this->settingsRepository->flushBuildDate();
     }
 
     protected function writeErrors(OutputInterface $output)
@@ -58,6 +61,11 @@ class AbsorbFeed extends Command
         foreach (Logging::getMessages() as $message) {
             $output->writeln('<error>' . $message . '</error>');
         }
+    }
+
+    protected function formatDateForMySQL($date)
+    {
+        return date('Y-m-d H:i:s', $date);
     }
 
     protected function absorb(OutputInterface $output, $id, $url)
@@ -85,7 +93,7 @@ class AbsorbFeed extends Command
             'lang' => $feed->getLanguage(),
             'title' => $feed->getTitle(),
             'feedUri' => $feed->getUrl(),
-            'lastUpdate' => date('Y-m-d h:i:s', $feed->getDate()),
+            'lastUpdate' => $this->formatDateForMySQL($feed->getDate()),
         ];
         $this->feedRepository->updateByPk($data, $id);
 
@@ -96,9 +104,11 @@ class AbsorbFeed extends Command
                 'remoteId' => $item->getId(),
                 'title' => $item->getTitle(),
                 'url' => $item->getUrl(),
-                'creationDate' => date('Y-m-d h:i:s', $item->getDate()),
+                'pubDate' => $this->formatDateForMySQL($item->getDate()),
                 'content' => $item->getContent(),
                 'author' => $item->getAuthor(),
+                /*'category' => $item->getCategory(),
+                'comments' => $item->getComments()*/
             ];
 
             $this->postRepository->add($data, true);

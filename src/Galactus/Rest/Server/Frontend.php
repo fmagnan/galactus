@@ -18,7 +18,7 @@ class Frontend
 
     public function feeds()
     {
-        $feedRepository = new QueryBuilder($this->connector, 'feeds', 'id');
+        $feedRepository = new QueryBuilder($this->connector, 'feeds');
         $feeds = $feedRepository->findActiveFeeds();
 
         return $feeds;
@@ -26,7 +26,7 @@ class Frontend
 
     public function posts()
     {
-        $postRepository = new QueryBuilder($this->connector, 'posts', 'id');
+        $postRepository = new QueryBuilder($this->connector, 'posts');
 
         $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : self::MAX_LIMIT_FOR_DATABASE_QUERIES;
         $limit = min($limit, self::MAX_LIMIT_FOR_DATABASE_QUERIES);

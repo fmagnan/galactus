@@ -14,14 +14,3 @@ INSERT INTO `feeds` (`name`, `url`, `isEnabled`) VALUES
 ('Mr Frankenstein',	'http://www.misterfrankenstein.com/wordpress/?feed=rss2',	1),
 ('Jeepee Online',	'http://www.jeepeeonline.be/feeds/posts/default?alt=rss',	1),
 ('Fumble Zone',	'http://fumblezone.net/index.php?feed/atom',	1);
-
-INSERT INTO `tags` (`id`, `name`) VALUES
-(1,	'jdr'),
-(2,	'podcast');
-
-INSERT INTO `feed_x_tag` (`feedId`, `tagId`) VALUES
-(1,	1),
-(2,	1),
-(3,	1),
-(5,	1),
-(5,	2);

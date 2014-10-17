@@ -8,7 +8,7 @@ class QueryBuilder
     protected $tableName;
     protected $primaryKey;
 
-    public function __construct(\PDO $connector, $tableName, $primaryKey)
+    public function __construct(\PDO $connector, $tableName, $primaryKey = 'id')
     {
         $this->connector = $connector;
         $this->tableName = $tableName;
@@ -63,10 +63,8 @@ class QueryBuilder
 
     public function findActiveFeeds()
     {
-        $query = 'SELECT `f`.*, GROUP_CONCAT(DISTINCT `t`.`name`) AS `tags`
+        $query = 'SELECT `f`.*
                 FROM `feeds` `f`
-                LEFT JOIN `feed_x_tag` `ft` ON `f`.`id`=`ft`.`feedId`
-                LEFT JOIN `tags` `t` ON `ft`.`tagId`=`t`.`id`
                 WHERE `f`.`isEnabled` = 1
                 GROUP BY `f`.`id`
                 ORDER BY `f`.`name`';
@@ -81,12 +79,12 @@ class QueryBuilder
     public function findActivePosts(array $conditions = [], $limit, $offset)
     {
         $mask = 'SELECT `p`.`id`, `p`.`feedId`, `p`.`title`, `p`.`url`,
-                DATE_FORMAT(`p`.`creationDate`, "%%Y-%%m-%%d") AS `creationDate`,
+                DATE_FORMAT(`p`.`pubDate`, "%%Y-%%m-%%d") AS `pubDate`,
                 `p`.`content`, `f`.`name` AS `feedName`
                 FROM `posts` `p`
                 JOIN `feeds` `f` ON `p`.`feedId`=`f`.`id`
                 WHERE 1 %s
-                ORDER BY `p`.`creationDate` DESC
+                ORDER BY `p`.`pubDate` DESC
                 LIMIT %d OFFSET %d';
         $where = '';
         foreach ($conditions as $key => $value) {
@@ -126,10 +124,10 @@ class QueryBuilder
         return $result;
     }
 
-    public function last()
+    public function last($limit = 20)
     {
         $mask = 'SELECT * FROM `%s` ORDER BY `%s` DESC LIMIT %d';
-        $query = sprintf($mask, $this->tableName, 'creationDate', 2);
+        $query = sprintf($mask, $this->tableName, 'pubDate', $limit);
         $this->connector->beginTransaction();
         $statement = $this->connector->prepare($query);
         $statement->execute();
@@ -138,4 +136,32 @@ class QueryBuilder
 
         return $posts;
     }
+
+    public function all()
+    {
+        $mask = 'SELECT `name`, `value` FROM `%s`';
+        $query = sprintf($mask, $this->tableName);
+        $this->connector->beginTransaction();
+        $statement = $this->connector->prepare($query);
+        $statement->execute();
+        $posts = $statement->fetchAll(\PDO::FETCH_KEY_PAIR);
+        $this->connector->commit();
+
+        return $posts;
+    }
+
+    public function flushBuildDate()
+    {
+        $mask = 'INSERT INTO `%s` (`name`, `value`)
+                VALUES ("lastBuildDate", NOW())
+                ON DUPLICATE KEY UPDATE `name` = NOW()';
+        $query = sprintf($mask, $this->tableName);
+        $this->connector->beginTransaction();
+        $statement = $this->connector->prepare($query);
+        $result = $statement->execute();
+        $this->connector->commit();
+
+        return $result;
+    }
+
 }

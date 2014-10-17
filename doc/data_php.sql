@@ -1,3 +1,13 @@
+DELETE FROM settings;
+
+INSERT INTO `settings` (`name`, `value`) VALUES
+('title', 'Planet PHP FR'),
+('atom_link', 'http://planete-php.fr/rss'),
+('link', 'http://planete-php.fr'),
+('description', 'Tous les blogs PHP francophones'),
+('language', 'fr-fr'),
+('generator', 'galactus: https://github.com/fmagnan/galactus');
+
 DELETE FROM feeds;
 
 INSERT INTO `feeds` (`name`, `url`, `isEnabled`) VALUES
@@ -39,7 +49,6 @@ INSERT INTO `feeds` (`name`, `url`, `isEnabled`) VALUES
 ('Jean-Marc Fontaine', 'http://flux.jmfontaine.net/jmfontaine-billets', 1),
 ('Formation CakePHP', 'http://feeds.feedburner.com/FormationCakephp', 1),
 ('Aurélien Gérits (Magix cjQuery)', 'http://magix-cjquery.com/feed/rss2', 1),
-('Cherry on the ...', 'http://cherryonthe.popnews.com/rss', 1),
 ('Joris Berthelot (rand(0))', 'http://blog.eexit.net/rss/', 1),
 ('Stéphane Brun (sbnet)', 'http://www.sbnet.fr/feed/', 1),
 ('Florent Viel (luxifer)', 'https://blog.luxifer.fr/atom.xml', 1),
@@ -75,6 +84,7 @@ INSERT INTO `feeds` (`name`, `url`, `isEnabled`) VALUES
 ('Julien Breux', 'http://www.julien-breux.com/feed', 1);
 
 /* semblent morts
+ ('Cherry on the ...', 'http://cherryonthe.popnews.com/rss', 1),
  ('Charles Rincheval (DigitalSpirit)', 'http://www.digitalspirit.org/blog/index.php/feed/rss2', 1),
  ('Martin Supiot (webaaz)', 'http://feeds2.feedburner.com/webaaz', 1),
  ('XHTML.net - Loïc', 'http://www.xhtml.net/', 1),
