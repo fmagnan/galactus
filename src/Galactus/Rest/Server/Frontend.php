@@ -55,7 +55,7 @@ class Frontend
         $channel = new Channel($settings);
         $rss = new Export($channel, $posts);
 
-        echo $rss->output();
+        die($rss->output());
     }
 
 }
