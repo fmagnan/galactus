@@ -9,4 +9,5 @@ use Galactus\Rest\Server\Frontend;
 Server::create('/', new Frontend($connector))
     ->addGetRoute('feeds', 'feeds')
     ->addGetRoute('posts', 'posts')
+    ->addGetRoute('rss', 'rss')
     ->run();

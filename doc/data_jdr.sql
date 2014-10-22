@@ -1,3 +1,15 @@
+DELETE FROM settings;
+
+INSERT INTO `settings` (`name`, `value`) VALUES
+('title', 'Planet Jeux de Rôles'),
+('atom_link', 'http://planet.jeuxderoles.net/rss'),
+('link', 'http://planet.jeuxderoles.net/'),
+('description', 'L\'actualité du jeux de Rôles'),
+('language', 'fr-fr'),
+('generator', 'galactus: https://github.com/fmagnan/galactus');
+
+DELETE FROM feeds;
+
 INSERT INTO `feeds` (`name`, `url`, `isEnabled`) VALUES
 ('Mémoire secondaire',	'http://www.memoiresecondaire.fr/?feed=rss2',	1),
 ('Black Book Editions',	'http://www.black-book-editions.fr/rss.xml',	1),

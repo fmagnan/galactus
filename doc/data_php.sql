@@ -2,8 +2,8 @@ DELETE FROM settings;
 
 INSERT INTO `settings` (`name`, `value`) VALUES
 ('title', 'Planet PHP FR'),
-('atom_link', 'http://planete-php.fr/rss'),
-('link', 'http://planete-php.fr'),
+('atom_link', 'http://planetphp.experimentation.fr/rss'),
+('link', 'http://planetphp.experimentation.fr/'),
 ('description', 'Tous les blogs PHP francophones'),
 ('language', 'fr-fr'),
 ('generator', 'galactus: https://github.com/fmagnan/galactus');

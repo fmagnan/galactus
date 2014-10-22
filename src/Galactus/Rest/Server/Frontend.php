@@ -3,6 +3,8 @@
 namespace Galactus\Rest\Server;
 
 use Galactus\Persistence\PDO\QueryBuilder;
+use Galactus\Service\Rss\Channel;
+use Galactus\Service\Rss\Export;
 
 class Frontend
 {
@@ -41,4 +43,19 @@ class Frontend
 
         return $posts;
     }
+
+    public function rss()
+    {
+        $postRepository = new QueryBuilder($this->connector, 'posts');
+        $posts = $postRepository->last();
+
+        $settingsRepository = new QueryBuilder($this->connector, 'settings', 'name');
+        $settings = $settingsRepository->all();
+
+        $channel = new Channel($settings);
+        $rss = new Export($channel, $posts);
+
+        echo $rss->output();
+    }
+
 }
