@@ -97,15 +97,33 @@ class AbsorbFeed extends Command
         ];
         $this->feedRepository->updateByPk($data, $id);
 
+
         foreach ($feed->items as $item) {
+            $url = $item->getUrl();
             $output->writeln('+ ' . $item->title);
+            $fullContent = file_get_contents($url);
+            $tidy = tidy_parse_string($fullContent, array(), 'UTF8');
+            $tidy->cleanRepair();
+            $html = $tidy->value;
+
+            $readability = new \Readability($html, $url);
+            $result = $readability->init();
+            if ($result) {
+                $content = $readability->getContent()->innerHTML;
+                $tidy = tidy_parse_string($content, array('indent' => true, 'show-body-only' => true), 'UTF8');
+                $tidy->cleanRepair();
+                $content = $tidy->value;
+            } else {
+                $output->writeln('unable to get full content');
+                $content = $item->getContent();
+            }
             $data = [
                 'feedId' => $id,
                 'remoteId' => $item->getId(),
                 'title' => $item->getTitle(),
-                'url' => $item->getUrl(),
+                'url' => $url,
                 'pubDate' => $this->formatDateForMySQL($item->getDate()),
-                'content' => $item->getContent(),
+                'content' => $content,
                 'author' => $item->getAuthor(),
                 /*'category' => $item->getCategory(),
                 'comments' => $item->getComments()*/
