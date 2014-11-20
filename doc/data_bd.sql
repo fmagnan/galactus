@@ -24,6 +24,8 @@ INSERT INTO `feeds` (`name`, `url`, `isEnabled`) VALUES
 ('Paka', 'http://www.paka-blog.com/feed/', 1),
 ('Macadam Valley', 'http://macadamvalley.com/feed/', 1),
 ('Leaves', 'http://leaves.webcomics.fr/rss', 1),
+('Tu mourras moins bête', 'http://tumourrasmoinsbete.blogspot.fr/feeds/posts/default', 1),
+('Boulet', 'http://www.bouletcorp.com/feed/', 1),
 ('Mister Hyde', 'http://www.mister-hyde.com/feeds/posts/default', 1);
 
 /*
