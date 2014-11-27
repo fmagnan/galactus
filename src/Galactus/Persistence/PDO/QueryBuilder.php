@@ -61,22 +61,19 @@ class QueryBuilder
         return $result;
     }
 
-    public function findActiveFeeds(array $conditions=[])
+    public function findActiveFeeds($code)
     {
-        $mask = 'SELECT `f`.*
+        $query = 'SELECT `f`.*
                 FROM `feeds` `f`
+                JOIN `planets` `p`
+                ON `f`.`planetId`=`p`.`id`
                 WHERE `f`.`isEnabled` = 1
-                %s
+                AND `p`.`code`=:code
                 GROUP BY `f`.`id`
                 ORDER BY `f`.`name`';
-        $where = '';
-        foreach ($conditions as $key => $value) {
-            $where .= sprintf('AND `%s`=:%s', $key, $key);
-        }
-        $query = sprintf($mask, $where);
         $this->connector->beginTransaction();
         $statement = $this->connector->prepare($query);
-        $statement->execute($conditions);
+        $statement->execute(['code' => $code]);
         $feeds = $statement->fetchAll(\PDO::FETCH_ASSOC);
         $this->connector->commit();
 
@@ -90,6 +87,7 @@ class QueryBuilder
                 `p`.`content`, `f`.`name` AS `feedName`
                 FROM `posts` `p`
                 JOIN `feeds` `f` ON `p`.`feedId`=`f`.`id`
+                JOIN `planets` `pl` ON `f`.`planetId` = `pl`.`id`
                 WHERE 1 %s
                 ORDER BY `p`.`pubDate` DESC
                 LIMIT %d OFFSET %d';

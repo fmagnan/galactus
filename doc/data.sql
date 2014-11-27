@@ -1,8 +1,8 @@
 DELETE FROM planets;
 
-INSERT INTO planets (`name`) VALUES ('php');
-INSERT INTO planets (`name`) VALUES ('jdr');
-INSERT INTO planets (`name`) VALUES ('bd');
+INSERT INTO planets (`code`) VALUES ('php');
+INSERT INTO planets (`code`) VALUES ('jdr');
+INSERT INTO planets (`code`) VALUES ('bd');
 
 DELETE FROM settings;
 

@@ -21,13 +21,8 @@ class Frontend
     public function feeds()
     {
         $feedRepository = new QueryBuilder($this->connector, 'feeds');
-
-        $conditions = [];
-        if (isset($_GET['planetId'])) {
-            $conditions['planetId'] = (int)$_GET['planetId'];
-        }
-
-        $feeds = $feedRepository->findActiveFeeds($conditions);
+        $code = isset($_GET['code']) ? $_GET['code'] : '';
+        $feeds = $feedRepository->findActiveFeeds($code);
 
         return $feeds;
     }
@@ -44,8 +39,8 @@ class Frontend
         if (isset($_GET['feedId'])) {
             $conditions['feedId'] = (int)$_GET['feedId'];
         }
-        if (isset($_GET['planetId'])) {
-            $conditions['planetId'] = (int)$_GET['planetId'];
+        if (isset($_GET['code'])) {
+            $conditions['code'] = $_GET['code'];
         }
 
         $posts = $postRepository->findActivePosts($conditions, $limit, $offset);
