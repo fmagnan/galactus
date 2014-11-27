@@ -92,7 +92,6 @@ class AbsorbFeed extends Command
         $data = [
             'lang' => $feed->getLanguage(),
             'title' => $feed->getTitle(),
-            'feedUri' => $feed->getUrl(),
             'lastUpdate' => $this->formatDateForMySQL($feed->getDate()),
         ];
         $this->feedRepository->updateByPk($data, $id);

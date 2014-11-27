@@ -61,15 +61,22 @@ class QueryBuilder
         return $result;
     }
 
-    public function findActiveFeeds()
+    public function findActiveFeeds(array $conditions=[])
     {
-        $query = 'SELECT `f`.*
+        $mask = 'SELECT `f`.*
                 FROM `feeds` `f`
                 WHERE `f`.`isEnabled` = 1
+                %s
                 GROUP BY `f`.`id`
                 ORDER BY `f`.`name`';
+        $where = '';
+        foreach ($conditions as $key => $value) {
+            $where .= sprintf('AND `%s`=:%s', $key, $key);
+        }
+        $query = sprintf($mask, $where);
         $this->connector->beginTransaction();
-        $statement = $this->connector->query($query);
+        $statement = $this->connector->prepare($query);
+        $statement->execute($conditions);
         $feeds = $statement->fetchAll(\PDO::FETCH_ASSOC);
         $this->connector->commit();
 
