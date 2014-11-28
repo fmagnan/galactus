@@ -72,4 +72,17 @@ class Frontend
         die($rss->output());
     }
 
+    public function addFeed($planetCode)
+    {
+        if (!isset($_POST['url'])) {
+            header('location: /');
+            exit;
+        }
+        $feedUrl = $_POST['url'];
+        $feedRepository = new QueryBuilder($this->connector, 'feeds');
+        $result = $feedRepository->proposeNewFeed(['code' => $planetCode, 'url' => $feedUrl], true);
+
+        return $result;
+    }
+
 }

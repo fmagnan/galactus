@@ -7,28 +7,26 @@ INSERT INTO planets (`code`) VALUES ('bd');
 DELETE FROM settings;
 
 INSERT INTO `settings` (`name`, `value`) VALUES
+('language', 'fr-fr'),
+('generator', 'galactus: https://github.com/fmagnan/galactus');
+
+INSERT INTO `settings` (`name`, `value`) VALUES
 ('php.title', 'Planet PHP FR'),
-('php.atom_link', 'http://planetphp.experimentation.fr/rss'),
-('php.link', 'http://planetphp.experimentation.fr/'),
-('php.description', 'Tous les blogs PHP francophones'),
-('php.language', 'fr-fr'),
-('php.generator', 'galactus: https://github.com/fmagnan/galactus');
+('php.atom_link', 'http://planet.myrtille.org/rss?code=jdr'),
+('php.link', 'http://planet.myrtille.org/php'),
+('php.description', 'Tous les blogs PHP francophones');
 
 INSERT INTO `settings` (`name`, `value`) VALUES
 ('bd.title', 'Planet BD'),
-('bd.atom_link', 'http://planetbd.jeuxderoles.net/rss'),
-('bd.link', 'http://planetbd.jeuxderoles.net/'),
-('bd.description', 'L\'actualité de la Bande-Dessinée'),
-('bd.language', 'fr-fr'),
-('bd.generator', 'galactus: https://github.com/fmagnan/galactus');
+('bd.atom_link', 'http://planet.myrtille.org/rss?code=jdr'),
+('bd.link', 'http://planet.myrtille.org/bd'),
+('bd.description', 'L\'actualité de la Bande-Dessinée');
 
 INSERT INTO `settings` (`name`, `value`) VALUES
 ('jdr.title', 'Planet Jeux de Rôles'),
-('jdr.atom_link', 'http://planet.jeuxderoles.net/rss'),
-('jdr.link', 'http://planet.jeuxderoles.net/'),
-('jdr.description', 'L\'actualité du jeux de Rôles'),
-('jdr.language', 'fr-fr'),
-('jdr.generator', 'galactus: https://github.com/fmagnan/galactus');
+('jdr.atom_link', 'http://planet.myrtille.org/rss?code=jdr'),
+('jdr.link', 'http://planet.myrtille.org/jdr'),
+('jdr.description', 'L\'actualité du jeux de Rôles');
 
 DELETE FROM feeds;
 

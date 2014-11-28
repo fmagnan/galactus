@@ -10,4 +10,5 @@ Server::create('/', new Frontend($connector))
     ->addGetRoute('feeds', 'feeds')
     ->addGetRoute('posts', 'posts')
     ->addGetRoute('rss', 'rss')
+    ->addPostRoute('planet/([a-z]+)/feed', 'addFeed')
     ->run();

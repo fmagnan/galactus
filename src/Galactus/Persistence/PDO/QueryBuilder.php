@@ -33,6 +33,18 @@ class QueryBuilder
         return $result;
     }
 
+    public function proposeNewFeed(array $data)
+    {
+        $query = 'INSERT INTO `feeds` (`planetId`, `url`, `isEnabled`)
+                SELECT `id`, :url, 0 FROM `planets` WHERE `code` = :code';
+        $this->connector->beginTransaction();
+        $statement = $this->connector->prepare($query);
+        $result = $statement->execute($data);
+        $this->connector->commit();
+
+        return $result;
+    }
+
     public function updateByPk(array $data, $pk)
     {
         $mask = 'UPDATE `%s` SET %s WHERE `%s`=%d';
@@ -130,7 +142,6 @@ class QueryBuilder
 
         return $result;
     }
-
 
     public function allWhichBeginWith($prefix = '')
     {
