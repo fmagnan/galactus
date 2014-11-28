@@ -50,13 +50,23 @@ class Frontend
 
     public function rss()
     {
+        if (!isset($_GET['code'])) {
+            header('location: /');
+            exit;
+        }
+
+        $code = $_GET['code'];
+        $conditions = ['code' => $code];
+        $prefix = $code . '.';
+
         $postRepository = new QueryBuilder($this->connector, 'posts');
-        $posts = $postRepository->last();
+        $posts = $postRepository->findActivePosts($conditions, 20);
 
         $settingsRepository = new QueryBuilder($this->connector, 'settings', 'name');
-        $settings = $settingsRepository->all();
+        $settings = $settingsRepository->allWhichBeginWith($prefix);
 
-        $channel = new Channel($settings);
+        $channel = new Channel($settings, $prefix);
+
         $rss = new Export($channel, $posts);
 
         die($rss->output());

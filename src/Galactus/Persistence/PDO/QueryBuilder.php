@@ -61,16 +61,18 @@ class QueryBuilder
         return $result;
     }
 
-    public function findActiveFeeds($code)
+    public function findActiveFeeds($code = false)
     {
-        $query = 'SELECT `f`.*
+        $mask = 'SELECT `f`.*
                 FROM `feeds` `f`
                 JOIN `planets` `p`
                 ON `f`.`planetId`=`p`.`id`
                 WHERE `f`.`isEnabled` = 1
-                AND `p`.`code`=:code
+                %s
                 GROUP BY `f`.`id`
                 ORDER BY `f`.`name`';
+        $codeClause = $code ? 'AND `p`.`code`=:code' : '';
+        $query = sprintf($mask, $codeClause);
         $this->connector->beginTransaction();
         $statement = $this->connector->prepare($query);
         $statement->execute(['code' => $code]);
@@ -80,11 +82,11 @@ class QueryBuilder
         return $feeds;
     }
 
-    public function findActivePosts(array $conditions = [], $limit, $offset)
+    public function findActivePosts(array $conditions = [], $limit, $offset = 0)
     {
         $mask = 'SELECT `p`.`id`, `p`.`feedId`, `p`.`title`, `p`.`url`,
                 DATE_FORMAT(`p`.`pubDate`, "%%Y-%%m-%%d") AS `pubDate`,
-                `p`.`content`, `f`.`name` AS `feedName`
+                `p`.`content`, `p`.`author`, `f`.`name` AS `feedName`
                 FROM `posts` `p`
                 JOIN `feeds` `f` ON `p`.`feedId`=`f`.`id`
                 JOIN `planets` `pl` ON `f`.`planetId` = `pl`.`id`
@@ -129,26 +131,14 @@ class QueryBuilder
         return $result;
     }
 
-    public function last($limit = 20)
-    {
-        $mask = 'SELECT * FROM `%s` ORDER BY `%s` DESC LIMIT %d';
-        $query = sprintf($mask, $this->tableName, 'pubDate', $limit);
-        $this->connector->beginTransaction();
-        $statement = $this->connector->prepare($query);
-        $statement->execute();
-        $posts = $statement->fetchAll(\PDO::FETCH_ASSOC);
-        $this->connector->commit();
 
-        return $posts;
-    }
-
-    public function all()
+    public function allWhichBeginWith($prefix = '')
     {
-        $mask = 'SELECT `name`, `value` FROM `%s`';
+        $mask = 'SELECT `name`, `value` FROM `%s` WHERE `name` LIKE :prefix';
         $query = sprintf($mask, $this->tableName);
         $this->connector->beginTransaction();
         $statement = $this->connector->prepare($query);
-        $statement->execute();
+        $statement->execute(['prefix' => $prefix . '%']);
         $posts = $statement->fetchAll(\PDO::FETCH_KEY_PAIR);
         $this->connector->commit();
 
@@ -159,7 +149,7 @@ class QueryBuilder
     {
         $mask = 'INSERT INTO `%s` (`name`, `value`)
                 VALUES ("lastBuildDate", NOW())
-                ON DUPLICATE KEY UPDATE `name` = NOW()';
+                ON DUPLICATE KEY UPDATE `value` = NOW()';
         $query = sprintf($mask, $this->tableName);
         $this->connector->beginTransaction();
         $statement = $this->connector->prepare($query);

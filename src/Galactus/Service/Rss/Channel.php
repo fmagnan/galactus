@@ -13,10 +13,17 @@ class Channel
     public $language;
     public $generator;
 
-    public function __construct(array $data)
+    public function __construct(array $data, $prefix = '')
     {
         foreach (get_object_vars($this) as $name => $value) {
-            $this->$name = $data[$name];
+            $key = $prefix . $name;
+            if (isset($data[$key])) {
+                $this->$key = $data[$key];
+            }
+            if (isset($data[$name])) {
+                $this->$name = $data[$name];
+            }
+
         }
     }
 
